@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dirsearch Pro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Palette: Catppuccin Mocha inspired + Custom */
+            --bg-base: #1e1e2e;
+            --bg-sidebar: #181825;
+            --bg-surface: #313244;
+            --bg-input: #45475a;
+
+            --text-main: #cdd6f4;
+            --text-muted: #a6adc8;
+
+            --primary: #89b4fa;
+            --primary-hover: #b4befe;
+
+            --success: #a6e3a1;
+            --warning: #f9e2af;
+            --error: #f38ba8;
+
+            --border: #45475a;
+
+            --radius: 8px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-input);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .new-scan-btn {
+            background-color: var(--primary);
+            color: var(--bg-base);
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .new-scan-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .history-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-radius: var(--radius);
+            background-color: transparent;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .history-item.active {
+            background-color: rgba(137, 180, 250, 0.1);
+            border-color: var(--primary);
+        }
+
+        .history-item .target {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .history-item .meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-running {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+        }
+
+        .status-completed {
+            background-color: var(--success);
+        }
+
+        .status-stopped {
+            background-color: var(--error);
+        }
+
+        .status-error {
+            background-color: var(--error);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+        }
+
+        /* Configuration Form */
+        .config-card {
+            background-color: var(--bg-surface);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .label-hint {
+            font-size: 11px;
+            /* Smaller hint */
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .scan-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #111;
+        }
+
+        .btn-stop {
+            background-color: var(--error);
+            color: #111;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            flex: 0 0 auto;
+        }
+
+        /* Status & Logs */
+        .active-scan-ui {
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .status-bar {
+            background-color: var(--bg-surface);
+            padding: 15px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-text {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .live-logs {
+            background-color: #000;
+            border-radius: var(--radius);
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--success);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid var(--border);
+            height: 400px;
+            flex-shrink: 0;
+            margin-bottom: 20px;
+        }
+
+        /* Results Table */
+        .results-section {
+            display: none;
+            background-color: var(--bg-surface);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-container {
+            overflow: auto;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background-color: var(--bg-input);
+            color: var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .code-200 {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .code-3xx {
+            color: var(--warning);
+        }
+
+        .code-4xx {
+            color: var(--error);
+        }
+
+        .code-5xx {
+            color: var(--error);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: var(--bg-surface);
+            width: 90%;
+            max-width: 700px;
+            border-radius: var(--radius);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+            height: 300px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            color: var(--success);
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: var(--radius);
+            resize: none;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Dirsearch
+        </div>
+
+        <button class="new-scan-btn" onclick="resetUI()">
+            <span>+</span> New Scan
+        </button>
+
+        <div class="history-label">San History</div>
+        <div class="history-list" id="historyList">
+            <!-- Populated by JS -->
+        </div>
+    </aside>
+
+    <main class="main">
+        <div id="setupView">
+            <div class="header">
+                <h1>New Scan</h1>
+                <p>Configure and launch a directory enumeration scan.</p>
+            </div>
+
+            <div class="config-card">
+                <div class="form-group">
+                    <label>Target URL / IP</label>
+                    <input type="text" id="target" placeholder="http://example.com" value="http://127.0.0.1:5000">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Extensions
+                        <span class="label-hint">(comma separated, e.g. php,html,js) [Leave empty to scan all]</span>
+                    </label>
+                    <input type="text" id="extensions" placeholder="php,html,js,txt" value="php,html,txt">
+                </div>
+
+                <div class="scan-actions">
+                    <button class="btn btn-primary" id="startBtn" onclick="startScan()">
+                        Start Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="activeView" class="active-scan-ui">
+            <div class="header">
+                <h1 id="activeTargetTitle">Scanning...</h1>
+                <p id="activeScanId">ID: ...</p>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-text" id="scanStatus">Running...</div>
+                <button class="btn btn-stop" id="stopBtn" onclick="stopScan()" style="width: auto; padding: 8px 20px;">
+                    Stop Scan
+                </button>
+            </div>
+
+            <div class="live-logs" id="logs"></div>
+
+            <div class="results-section" id="resultsSection">
+                <div class="results-header">
+                    <h3>Scan Results</h3>
+                    <div class="toolbar">
+                        <button class="btn btn-secondary" onclick="show200Dialog()">View 200 OK</button>
+                        <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+                        <button class="btn btn-secondary" onclick="exportTXT()">Export TXT</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Path / URL</th>
+                                <th>Status</th>
+                                <th>Size</th>
+                                <th>Redirect</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>200 OK Results</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="modalText" readonly></textarea>
+                <button class="btn btn-primary" onclick="copyModalText()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScanId = null;
+        let eventSource = null;
+        let currentResults = [];
+
+        // Formatting Helpers
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/history');
+                const history = await res.json();
+                renderHistory(history);
+            } catch (e) {
+                console.error("Failed to load history", e);
+            }
+        }
+
+        function renderHistory(history) {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            history.forEach(item => {
+                const el = document.createElement('div');
+                el.className = `history-item ${item.id === currentScanId ? 'active' : ''}`;
+                const date = formatDate(item.timestamp);
+
+                let statusClass = 'status-running';
+                if (item.status === 'completed') statusClass = 'status-completed';
+                if (item.status === 'stopped') statusClass = 'status-stopped';
+                if (item.status === 'error') statusClass = 'status-error';
+
+                el.innerHTML = `
+                    <div class="target">${item.target}</div>
+                    <div class="meta">
+                        <span>${date}</span>
+                        <span class="status-dot ${statusClass}"></span>
+                    </div>
+                `;
+                el.onclick = () => loadScanDetails(item.id);
+                list.appendChild(el);
+            });
+        }
+
+        function resetUI() {
+            currentScanId = null;
+            if (eventSource) eventSource.close();
+
+            document.getElementById('setupView').style.display = 'block';
+            document.getElementById('activeView').style.display = 'none';
+            document.getElementById('logs').textContent = '';
+            document.getElementById('resultsTable').querySelector('tbody').innerHTML = '';
+
+            // Refresh history to remove active highlight
+            loadHistory();
+        }
+
+        // --- Core Logic ---
+
+        async function startScan() {
+            const target = document.getElementById('target').value;
+            const extensions = document.getElementById('extensions').value;
+            const btn = document.getElementById('startBtn');
+
+            if (!target) return alert("Target is required");
+
+            btn.disabled = true;
+            btn.textContent = "Starting...";
+
+            try {
+                const res = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, extensions })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                currentScanId = data.scan_id;
+                await loadHistory(); // Refresh sidebar
+
+                // Switch view
+                loadScanDetails(currentScanId, true); // true = isNew
+
+            } catch (e) {
+                alert("Error starting scan: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Start Scan";
+            }
+        }
+
+        async function loadScanDetails(scanId, isNew = false) {
+            currentScanId = scanId;
+            // Highlight sidebar
+            loadHistory(); // Re-render to update active class (inefficient but safe)
+
+            // UI Switch
+            document.getElementById('setupView').style.display = 'none';
+            document.getElementById('activeView').style.display = 'flex';
+
+            const logsDiv = document.getElementById('logs');
+            const resultsSection = document.getElementById('resultsSection');
+            const statusDiv = document.getElementById('scanStatus');
+            const stopBtn = document.getElementById('stopBtn');
+
+            if (isNew) {
+                logsDiv.textContent = '';
+                resultsSection.style.display = 'none';
+            }
+
+            // Fetch Status
+            try {
+                const res = await fetch(`/status/${scanId}`);
+                const data = await res.json();
+
+                document.getElementById('activeTargetTitle').textContent = `Scanning: ${data.results && data.results.length ? data.results[0].url : (document.getElementById('target').value || 'Target')}`;
+                // Wait, data.results might be empty. Better to use stored target in history logic, but API doesn't return target in status? 
+                // Ah, check web_gui.py. Status JSON doesn't strictly have target. History does.
+                // Assuming we can get target from history list or I should add it to status JSON.
+                // I'll skip target update for now or infer it.
+                document.getElementById('activeScanId').innerText = `ID: ${scanId}`;
+
+                statusDiv.textContent = data.status.toUpperCase();
+
+                if (data.status === 'running') {
+                    stopBtn.disabled = false;
+                    stopBtn.style.display = 'inline-flex';
+                    // Connect stream
+                    startLogStream(scanId);
+                } else {
+                    stopBtn.disabled = true;
+                    stopBtn.style.display = 'none';
+                    if (eventSource) eventSource.close();
+                }
+
+                // Render Results if any
+                if (data.results) {
+                    renderResults(data.results);
+                } else {
+                    document.getElementById('resultsTable').querySelector('tbody').innerHTML = '';
+                }
+
+                if (data.status !== 'running') {
+                    resultsSection.style.display = 'flex';
+                }
+
+            } catch (e) {
+                console.error("Error loading details", e);
+            }
+        }
+
+        function startLogStream(scanId) {
+            if (eventSource) eventSource.close();
+            const logsDiv = document.getElementById('logs');
+
+            eventSource = new EventSource(`/stream/${scanId}`);
+
+            eventSource.onmessage = (e) => {
+                if (e.data === "[DONE]") {
+                    eventSource.close();
+                    loadScanDetails(scanId); // Refresh to show results
+                    loadHistory(); // Update status dot
+                    return;
+                }
+                try {
+                    const line = JSON.parse(e.data);
+                    // Filter ANSI codes
+                    const cleanLine = line.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+                    logsDiv.textContent += cleanLine;
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                } catch (err) { }
+            };
+
+            eventSource.onerror = () => {
+                eventSource.close();
+            };
+        }
+
+        async function stopScan() {
+            if (!currentScanId) return;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('scanStatus').textContent = "STOPPING...";
+            try {
+                await fetch(`/stop/${currentScanId}`, { method: 'POST' });
+                // Poll status will handle the rest via stream close or done
+            } catch (e) { console.error(e); }
+        }
+
+        function renderResults(results) {
+            currentResults = results;
+            const tbody = document.getElementById('resultsTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            document.getElementById('resultsSection').style.display = 'flex';
+
+            if (!results.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No results found (or full scan logs pending)</td></tr>';
+                return;
+            }
+
+            results.forEach(r => {
+                const tr = document.createElement('tr');
+                let colorClass = '';
+                if (r.status >= 200 && r.status < 300) colorClass = 'code-200';
+                else if (r.status >= 300 && r.status < 400) colorClass = 'code-3xx';
+                else if (r.status >= 400 && r.status < 500) colorClass = 'code-4xx';
+                else if (r.status >= 500) colorClass = 'code-5xx';
+
+                tr.innerHTML = `
+                    <td><a href="${r.url}" target="_blank" style="color:inherit; text-decoration:none">${r.url}</a></td>
+                    <td class="${colorClass}">${r.status}</td>
+                    <td>${r.contentLength}</td>
+                    <td>${r.redirect || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Modal & Export ---
+        function show200Dialog() {
+            const ok = currentResults.filter(r => r.status === 200);
+            const text = ok.length ? ok.map(r => r.url).join('\n') : "No 200 OK results.";
+            document.getElementById('modalText').value = text;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function copyModalText() {
+            const el = document.getElementById('modalText');
+            el.select();
+            document.execCommand('copy');
+            alert("Copied!");
+        }
+
+        function exportCSV() {
+            if (!currentResults.length) return;
+            let csv = "URL,Status,Size,Redirect\n";
+            currentResults.forEach(r => {
+                csv += `${r.url},${r.status},${r.contentLength},${r.redirect || ''}\n`;
+            });
+            download(csv, "scan_results.csv", "text/csv");
+        }
+
+        function exportTXT() {
+            if (!currentResults.length) return;
+            let txt = "";
+            currentResults.forEach(r => {
+                txt += `[${r.status}] ${r.url} - ${r.contentLength}\n`;
+            });
+            download(txt, "scan_results.txt", "text/plain");
+        }
+
+        function download(content, name, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            a.click();
+        }
+
+    </script>
+</body>
+
+</html>

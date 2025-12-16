@@ -1,0 +1,22 @@
+data: "\n"
+
+data: "  _|. _ _  _  _  _ _|_    v0.4.3\n"
+
+data: " (_||| _) (/_(_|| (_| )\n"
+
+data: "\n"
+
+data: "Extensions: php | HTTP method: GET | Threads: 25 | Wordlist size: 9608\n"
+
+data: "\n"
+
+data: "Target: http://127.0.0.1:5000/\n"
+
+data: "\n"
+
+data: "[17:08:39] Scanning: \n"
+
+data: "Task Completed\n"
+
+data: [DONE]
+

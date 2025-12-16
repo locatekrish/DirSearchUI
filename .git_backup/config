@@ -1,0 +1,18 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[branch "master"]
+	vscode-merge-base = origin/master
+[user]
+	email = locatekrish@gmail.com
+	name = locatekrish
+[branch "main"]
+	vscode-merge-base = origin/master
+	vscode-merge-base = origin/master
+[remote "origin"]
+	url = https://locatekrish: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@github.com/locatekrish/DirSearchUI.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
